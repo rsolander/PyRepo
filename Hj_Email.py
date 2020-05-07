@@ -17,12 +17,13 @@ import plotly.express as px
 import streamlit as st
 from datetime import datetime, timedelta
 import pytz
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+#from pydrive.auth import GoogleAuth
+#from pydrive.drive import GoogleDrive
 import apscheduler
 from apscheduler.schedulers.blocking import BlockingScheduler
-#from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+
+from yandex.Translater import Translater
+from langdetect import detect
 
 def main():
 
@@ -137,7 +138,7 @@ def main():
         with requests.Session() as session:
             payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
             rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
-            r = session.get(dlurl, headers=headexp)
+            r = session.get(dlurl, headers=headexp, timeout=10)
             with open('feedback-256010.csv', 'wb') as fd:
                 fd.write(r.content)
         contdf = pd.read_csv('HJemail_contacts.csv')
@@ -154,7 +155,7 @@ def main():
         #jobstores = {'mongo': MongoDBJobStore()}
         #apscheduler.jobstores.memory.MemoryJobStore.shutdown()
     sched = BlockingScheduler()
-    sched.add_job(schtask,'interval', hours=6, id='sendresp_emails')
+    sched.add_job(schtask,'interval', hours=3, id='sendresp_emails')
     sched.start()
     #setupSch()
     #atexit.register(lambda: sched.shutdown())
@@ -259,8 +260,8 @@ def sendEmail(target_email,url,tmrange,etype):
         #Link : 128279, 1F517
         emo = '128528'
 
-        from yandex.Translater import Translater
-        from langdetect import detect
+        #from yandex.Translater import Translater
+        #from langdetect import detect
 
         for row in mess_df.itertuples():
             if str(row.Email)=="nan":
