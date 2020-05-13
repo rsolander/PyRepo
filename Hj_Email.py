@@ -109,7 +109,7 @@ def main():
             'path': '/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2020-03-24',
             'scheme': 'https',
             'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
+            'accept-encoding': 'gzip, deflate',
             'accept-language': 'en-US,en;q=0.9',
             'referer': 'https://insights.hotjar.com/sites/1547206/feedback/responses/256010',
             'sec-fetch-dest': 'empty',
@@ -138,9 +138,10 @@ def main():
         with requests.Session() as session:
             payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
             rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
-            r = session.get(dlurl, headers=headexp, timeout=10)
-            with open('feedback-256010.csv', 'wb') as fd:
-                fd.write(r.content)
+            with session.get(dlurl, headers=headexp, stream=True) as r:
+                with open('feedback-256010.csv', 'wb') as fd:
+                    for chunk in r.iter_content(chunk_size=None):
+                        fd.write(chunk)
         contdf = pd.read_csv('HJemail_contacts.csv')
         contdf = contdf.dropna()
         if contdf.empty == True:
@@ -155,7 +156,7 @@ def main():
         #jobstores = {'mongo': MongoDBJobStore()}
         #apscheduler.jobstores.memory.MemoryJobStore.shutdown()
     sched = BlockingScheduler()
-    sched.add_job(schtask,'interval', hours=3, id='sendresp_emails')
+    sched.add_job(schtask,'interval', minutes=5, id='sendresp_emails')
     sched.start()
     #setupSch()
     #atexit.register(lambda: sched.shutdown())
@@ -206,6 +207,7 @@ def main():
     #             #st.warning('Action Item: ')
 
 def sendEmail(target_email,url,tmrange,etype):
+    print('SendEmail func started')
     df = pd.read_csv('feedback-256010.csv')
     edf = pd.read_csv('email_records.csv')
     if url == "EMEA":
@@ -389,6 +391,6 @@ def sendEmail(target_email,url,tmrange,etype):
     upd_edf.to_csv('email_records.csv', index = False)
 
     st.write("Email for "+str(url)+" sent to "+str(target_email))
-
+    print('SendEmail func ended')
 if __name__ == "__main__":
     main()

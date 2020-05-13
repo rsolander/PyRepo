@@ -27,7 +27,7 @@ def main():
         'path': '/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2020-03-24',
         'scheme': 'https',
         'accept': '*/*',
-        'accept-encoding': 'gzip, deflate, br',
+        'accept-encoding': 'gzip, deflate',
         'accept-language': 'en-US,en;q=0.9',
         'referer': 'https://insights.hotjar.com/sites/1547206/feedback/responses/256010',
         'sec-fetch-dest': 'empty',
@@ -75,9 +75,10 @@ def main():
             with requests.Session() as session:
                 payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
                 rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
-                r = session.get(dlurl, headers=headexp)
-                with open('feedback-256010.csv', 'wb') as fd:
-                    fd.write(r.content)
+                with session.get(dlurl, headers=headexp, stream=True) as r:
+                    with open('feedback-256010.csv', 'wb') as fd:
+                        for chunk in r.iter_content(chunk_size=None):
+                            fd.write(chunk)
             dlresp = st.text('Download successful.')
         else:
             dlresp = st.text('Please wait 5 minutes before downloading again.')
