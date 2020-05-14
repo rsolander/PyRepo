@@ -150,13 +150,14 @@ def main():
             contdf['Emails']=contdf['Emails'].str.split(', ')
             for row in contdf.itertuples():
                 for e in row.Emails:
-                    sendEmail(e,row.Site,1,'Responses')
+                    sendEmail(e,row.Site,4,'Responses')
+                    time.sleep(1)
     #@st.cache()
     #def setupSch():
         #jobstores = {'mongo': MongoDBJobStore()}
         #apscheduler.jobstores.memory.MemoryJobStore.shutdown()
     sched = BlockingScheduler()
-    sched.add_job(schtask,'interval', hours=3, id='sendresp_emails')
+    sched.add_job(schtask,'interval', hours=1, id='sendresp_emails')
     sched.start()
     #setupSch()
     #atexit.register(lambda: sched.shutdown())
