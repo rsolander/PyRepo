@@ -12,10 +12,9 @@ import streamlit as st
 from streamlit import caching
 from datetime import datetime, timedelta
 import pytz
-import apscheduler
-from apscheduler.schedulers.blocking import BlockingScheduler
 
 def main():
+    pd.options.mode.chained_assignment = None
     st.title('Configure HotJar Email Contacts')
     contdf = pd.read_csv('HJemail_contacts.csv')
     webdic = {"Allen-Bradley" : "ab.rockwellautomation", "Rockwell Automation" : "www.rockwellautomation.com","RA/my" : "www.rockwellautomation.com/my","PCDC" : "compatibility.rockwellautomation",
@@ -62,16 +61,18 @@ def main():
                 contdf.loc[contdf['Site']==selsite, 'Emails'] = contdf.loc[contdf['Site']==selsite,'Emails'].str.replace((str(sem)+', '),'', regex=False)
                 contdf.loc[contdf['Site']==selsite, 'Emails'] = contdf.loc[contdf['Site']==selsite,'Emails'].str.rstrip(', ')
             contdf.to_csv('HJemail_contacts.csv', index=False)
+            #contdf=contdf.iloc[0:0]
             contdf = pd.read_csv('HJemail_contacts.csv')
             selsite = webdic[webms]
     #st.write(sel_contdf)
-    if contdf.loc[contdf['Site']==selsite, 'Emails'].dropna().empty==False:
-        sel_contdf = contdf.loc[contdf['Site']==selsite]
-        sel_contdf['Emails']=sel_contdf['Emails'].str.split(', ')
-        for row in sel_contdf.dropna().itertuples():
-            st.subheader('Emails scheduled to recieve feedback for '+ str(webms)+':')
-            for e in row.Emails:
-                st.text(e)
+    #if contdf.loc[contdf['Site']==selsite, 'Emails'].dropna().empty==False:
+        #sel_contdf = contdf.loc[contdf['Site']==selsite]
+        #sel_contdf['Emails']=sel_contdf['Emails'].str.split(', ')
+        #for row in sel_contdf.dropna().itertuples():
+            #st.subheader('Emails scheduled to recieve feedback for '+ str(webms)+':')
+            #for e in row.Emails:
+                #st.text(e)
+    st.table(contdf.style.hide_index())
 
 if __name__ == "__main__":
     main()
