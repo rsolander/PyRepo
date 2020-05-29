@@ -25,6 +25,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from yandex.Translater import Translater
 from langdetect import detect
 
+import tracemalloc
+
 def main():
 
     # dlurl= 'https://insights.hotjar.com/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-05-11'
@@ -44,7 +46,7 @@ def main():
     # 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36'
     # }
 
-    st.title("HotJar Automated Email Feedback")
+    #st.title("HotJar Automated Email Feedback")
 
     # timzo = pytz.timezone('US/Eastern')
     # lastmod = os.path.getmtime('feedback-256010.csv')
@@ -101,6 +103,7 @@ def main():
     # contdf['Emails']=contdf['Emails'].str.split(', ')
 
     def schtask():
+        tracemalloc.start()
         loginurl = 'https://insights.hotjar.com/api/v2/users'
         dlurl= 'https://insights.hotjar.com/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-05-11'
         headexp = {
@@ -150,8 +153,11 @@ def main():
             contdf['Emails']=contdf['Emails'].str.split(', ')
             for row in contdf.itertuples():
                 for e in row.Emails:
-                    sendEmail(e,row.Site,4,'Responses')
+                    sendEmail(e,row.Site,1,'Responses')
                     time.sleep(1)
+        current, peak = tracemalloc.get_traced_memory()
+        print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+        tracemalloc.stop()
     #@st.cache()
     #def setupSch():
         #jobstores = {'mongo': MongoDBJobStore()}
@@ -245,8 +251,8 @@ def sendEmail(target_email,url,tmrange,etype):
         #return
 
     testemail = MIMEMultipart()
-    sender_email = "rsolander@gmail.com"
-    pw = "Ao1HO2RO3"
+    sender_email = "hotjarreports@gmail.com"
+    pw = "Rockwell1"
     #target_email = "olander.14@yahoo.com"
     testemail["From"] = sender_email
     testemail["To"] = target_email
@@ -381,7 +387,7 @@ def sendEmail(target_email,url,tmrange,etype):
     session = smtplib.SMTP('smtp.gmail.com', 587, None, 30)
     session.starttls()
     session.login(sender_email, pw)
-    session.set_debuglevel(1)
+    #session.set_debuglevel(1)
     text = testemail.as_string()
     session.sendmail(sender_email, target_email, text)
     session.quit()
