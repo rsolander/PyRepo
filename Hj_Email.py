@@ -25,7 +25,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from yandex.Translater import Translater
 from langdetect import detect
 
-import tracemalloc
+#import tracemalloc
 
 def main():
 
@@ -103,7 +103,7 @@ def main():
     # contdf['Emails']=contdf['Emails'].str.split(', ')
 
     def schtask():
-        tracemalloc.start()
+        #tracemalloc.start()
         loginurl = 'https://insights.hotjar.com/api/v2/users'
         dlurl= 'https://insights.hotjar.com/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-05-11'
         headexp = {
@@ -155,9 +155,9 @@ def main():
                 for e in row.Emails:
                     sendEmail(e,row.Site,1,'Responses')
                     time.sleep(1)
-        current, peak = tracemalloc.get_traced_memory()
-        print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-        tracemalloc.stop()
+        #current, peak = tracemalloc.get_traced_memory()
+        #print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+        #tracemalloc.stop()
     #@st.cache()
     #def setupSch():
         #jobstores = {'mongo': MongoDBJobStore()}
