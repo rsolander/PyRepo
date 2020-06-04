@@ -14,7 +14,16 @@ import streamlit as st
 from datetime import datetime, timedelta
 import pytz
 
+from wordcloud import WordCloud, STOPWORDS
+import matplotlib.pyplot as plt
+
+from yandex.Translater import Translater
+from langdetect import detect
+
 def main():
+    tr = Translater()
+    tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
+    pd.options.mode.chained_assignment = None
     # options
     pd.set_option("display.precision", 3)
     pd.options.display.float_format = '{:.4f}'.format
@@ -191,14 +200,9 @@ def main():
 
 
 
-    #pieplot = px.pie(down_df, names="Country", hole = .4, title="All Time Feedback Breakdown by country for "+url)
-    #st.plotly_chart(pieplot)
-
     mess_df=date_df.loc[date_df["Message"].notna()]
     mess_df = mess_df.drop(columns=['Number',"User","OS"])
 
-    from wordcloud import WordCloud, STOPWORDS
-    import matplotlib.pyplot as plt
     if mess_df.empty == False:
         st.header("WordCloud for feedback responses:")
         cust_swords = ["Rockwell", "Automation"] + list(STOPWORDS)
@@ -219,8 +223,6 @@ def main():
 
     body="Here is a list of responses over the past "+str(tmrange)+" weeks for "+str(url)
 
-    from yandex.Translater import Translater
-    from langdetect import detect
 
     st.subheader('Responses over the past '+str(tmrange)+' week(s):')
     mfsb = st.selectbox("Filter messages by:", options=list(mfildic.keys()))
@@ -239,8 +241,6 @@ def main():
                     if detlan == 'en':
                         st.info("\"" + row.Message + "\"")
                     else:
-                        tr = Translater()
-                        tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
                         tr.set_text(str(row.Message))
                         try:
                             tr.set_from_lang(detlan)
@@ -258,8 +258,6 @@ def main():
                     if detlan == 'en':
                         st.success("\"" + row.Message + "\"")
                     else:
-                        tr = Translater()
-                        tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
                         tr.set_text(str(row.Message))
                         try:
                             tr.set_from_lang(detlan)
@@ -277,8 +275,6 @@ def main():
                     if detlan =='en':
                         st.error("\"" + row.Message + "\"")
                     else:
-                        tr = Translater()
-                        tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
                         tr.set_text(str(row.Message))
                         try:
                             tr.set_from_lang(detlan)

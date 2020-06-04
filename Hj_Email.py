@@ -28,7 +28,8 @@ from langdetect import detect
 #import tracemalloc
 
 def main():
-
+    tr = Translater()
+    tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
     # dlurl= 'https://insights.hotjar.com/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-05-11'
     # head2 = {
     # 'authority': 'insights.hotjar.com',
@@ -295,8 +296,6 @@ def sendEmail(target_email,url,tmrange,etype):
                 htmlbod = htmlbod+'<p><q>'+str(row.Message)+'</q></p><p>&#'+emo+email+' on '+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device)+'</p><a href='+str(row._3)+'>&#128279'+str(row._3)+'</a><hr>'
             else:
                 try:
-                    tr = Translater()
-                    tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
                     tr.set_text(str(row.Message))
                     tr.set_to_lang('en')
                     mtrans = tr.translate()
