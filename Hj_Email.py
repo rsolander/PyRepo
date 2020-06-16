@@ -22,14 +22,14 @@ import pytz
 import apscheduler
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from yandex.Translater import Translater
-from langdetect import detect
+#from yandex.Translater import Translater
+#from langdetect import detect
 
 #import tracemalloc
 
 def main():
-    tr = Translater()
-    tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
+    #tr = Translater()
+    #tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
     # dlurl= 'https://insights.hotjar.com/api/v1/sites/1547206/feedback/256010/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-05-11'
     # head2 = {
     # 'authority': 'insights.hotjar.com',
@@ -257,21 +257,18 @@ def sendEmail(target_email,url,tmrange,etype):
     #target_email = "olander.14@yahoo.com"
     testemail["From"] = sender_email
     testemail["To"] = target_email
-    testemail["Subject"] = "Hotjar feedback from "+week_prior.strftime("%m/%d")+" to "+ today.strftime("%m/%d")+" | "+str(url)
+    testemail["Subject"] = "Hotjar Feedback"+" | "+str(url)
 
     if etype == 'Responses':
         mess_df=date_df.loc[date_df["Message"].notna()]
         mess_df = mess_df.drop(columns=['Number',"User","OS"])
 
-        htmlbod = '<html><body><h1>Hotjar feedback over past '+str(tmrange)+' week(s) for '+str(url)+'</h1>'
+        htmlbod = '<html><body><h1>Hotjar feedback from '+week_prior.strftime("%m/%d")+' to '+ today.strftime("%m/%d")+' for '+str(url)+'</h1>'
         if mess_df.empty == True:
             htmlbod = '<html><body><p>No feedback responses for '+str(url)+' over '+str(tmrange)+' week(s).</p>'
         #Emjois: 5: 128522,1F60A 4: 128527, 1F60F 3: 128528, 1F610 2: 128530 1F612 1: 128544, 1F620
         #Link : 128279, 1F517
         emo = '128528'
-
-        #from yandex.Translater import Translater
-        #from langdetect import detect
 
         for row in mess_df.itertuples():
             if str(row.Email)=="nan":
@@ -288,20 +285,20 @@ def sendEmail(target_email,url,tmrange,etype):
                 emo='128527'
             elif row._7==5:
                 emo='128522'
-            try:
-                detlan = detect(str(row.Message))
-            except:
-                detlan = 'en'
-            if detlan == 'en':
-                htmlbod = htmlbod+'<p><q>'+str(row.Message)+'</q></p><p>&#'+emo+email+' on '+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device)+'</p><a href='+str(row._3)+'>&#128279'+str(row._3)+'</a><hr>'
-            else:
-                try:
-                    tr.set_text(str(row.Message))
-                    tr.set_to_lang('en')
-                    mtrans = tr.translate()
-                except:
-                    mtrans = "Translation failed."
-                htmlbod = htmlbod+'<p><q>'+str(row.Message)+'</q></p><p>Translation attempt: <q>'+mtrans+'</q></p><p>&#'+emo+email+' on '+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device)+'</p><a href='+str(row._3)+'>&#128279'+str(row._3)+'</a><hr>'
+            #try:
+                #detlan = detect(str(row.Message))
+            #except:
+                #detlan = 'en'
+            #if detlan == 'en':
+            htmlbod = htmlbod+'<p><q>'+str(row.Message)+'</q></p><p>&#'+emo+email+' on '+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device)+'</p><a href='+str(row._3)+'>&#128279'+str(row._3)+'</a><hr>'
+            #else:
+                #try:
+                    #tr.set_text(str(row.Message))
+                    #tr.set_to_lang('en')
+                    #mtrans = tr.translate()
+                #except:
+                    #mtrans = "Translation failed."
+                #htmlbod = htmlbod+'<p><q>'+str(row.Message)+'</q></p><p>Translation attempt: <q>'+mtrans+'</q></p><p>&#'+emo+email+' on '+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device)+'</p><a href='+str(row._3)+'>&#128279'+str(row._3)+'</a><hr>'
 
         htmlbod = htmlbod + '</body></html>'
         testemail.attach(MIMEText(htmlbod, "html"))

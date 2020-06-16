@@ -17,12 +17,12 @@ import pytz
 from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
 
-from yandex.Translater import Translater
-from langdetect import detect
+#from yandex.Translater import Translater
+#from langdetect import detect
 
 def main():
-    tr = Translater()
-    tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
+    #tr = Translater()
+    #tr.set_key('trnsl.1.1.20200326T171128Z.c6e42851517b0a0a.363c0f12f70ef655b2ea466b33e40856c53df6c8')
     pd.options.mode.chained_assignment = None
     # options
     pd.set_option("display.precision", 3)
@@ -92,31 +92,26 @@ def main():
         else:
             dlresp = st.text('Please wait 5 minutes before downloading again.')
 
+    lastmod = os.path.getmtime('feedback-256010.csv')
+    lastmod = datetime.fromtimestamp(lastmod)
+    lastmodstr = lastmod.strftime('%m/%d/%Y'+' '+'%X')
+
     st.text('Showing data from Hotjar as of: '+str(lastmodstr))
-    if lastmod.date() < today.date():
-        st.error('Warning: we have detected that the feedback data is not up to date. Please hit "Download latest HotJar data" to fetch latest feedback.')
-    elif lastmod.date() == today.date():
-        st.info("Hotjar feedback data has been downloaded recently.")
+    #if lastmod.date() < today.date():
+        #st.error('Warning: we have detected that the feedback data is not up to date. Please hit "Download latest HotJar data" to fetch latest feedback.')
+    #elif lastmod.date() == today.date():
+        #st.info("Hotjar feedback data has been downloaded recently.")
     df = pd.read_csv('feedback-256010.csv')
 
     kvp = {"[All Feedback]" : "","Allen-Bradley" : "ab.rockwellautomation", "Rockwell Automation" : "www.rockwellautomation.com","RA/my" : "www.rockwellautomation.com/my","PCDC" : "compatibility.rockwellautomation",
     "Account" : "www.rockwellautomation.com/account/","Download.RA" : "download.rockwellautomation.com","Search" : "rockwellautomation.com/search","Investor Relations" : "ir.rockwellautomation",
     "Campaign Pages" : "campaign.rockwellautomation", "E-learning Pages" : "training/e-learning"}
-    #cskvp = {"[No filter]":"", "English - NA":"en_NA", "Spanish - Central America":"es_CEM", "English - Caribbean":"en_CAR", "Spanish - Caribbean":"es_CAR", "English - Middle East":"en_MDE",
-    #"English - Sub-Saharan Africa":"en_ZA", "English - Southeast Asia":"en_SEA", "Spanish - Argentina":"es_AR", "Spanish - Mexico":"es_MX", "Portuguese - Brazil":"pt_BR", "Chinese - China":"zh_CN",
-    #"German - Germany":"de_DE", "Czech - Czech":"cs_CZ", "Spanish - Spain":"es_ES", "French - France":"fr_FR", "English - India":"en_IN", "English - Israel":"en_IL", "Italian - Italy":"it_IT",
-    #"Japanese - Japan":"ja_JP","Korean - Korea":"ko_KR","Turkish - Turkey":"tr_TR", "English - United Kingdom":"en_GB", "Russian - Russia":"ru_RU"}
+
     ablkvp = {"[No language specified]":"","zh":"/zh/","Deutsch":"/de/","Spanish":"/es/","French":"/fr/","Italian":"/it/","Japanese":"/ja/","Korean":"/ko/","Portuguese":"/pt/"}
     tlkeys = {"[No country filter]":1,"NA":2,"EMEA":3,"APAC":4,"LAR":5}
     testlist = {1 : [""], 2 : ["en_NA"], 3 : ["cs_CZ","en_UK","nl_BE","da_DK","en_ZA","nl_NL","de_AT","es_ES","pl_PL","de_CH","fr_BE","pt_pt","de_DE","fr_CH","ru_RU","en_IE","fr_FR","sv_SE","en_IL","it_IT","tr_TR","en_MDE"],
     4 : ["zh_CN","ja_JP","zh_TW","en_SEA","ko_KR","en_AU","en_NZ","en_IN"], 5 : ["en_CAR","es_CL","es_PE","es_CAR","es_CO","es_VE","es_AR","es_EC","pt_BR","es_CEM","es_MX"]}
-    #URLs to consider:
-    #"ab.rockwellautomation"
-    #"www.rockwellautomation.com"
-    #"www.rockwellautomation.com/my"
-    #"compatibility.rockwellautomation"
-    #"www.rockwellautomation.com/account/"
-    #'rockwellautomation.com/search'
+
 
     urlch = st.selectbox("Choose a URL to analyze:", options=list(kvp.keys()))
     url = kvp[urlch]
@@ -175,7 +170,7 @@ def main():
         #st.header("Where is the bad feedback coming from?")
         #badperc = px.pie(bad_df, names="Country", hole = .4, title = "% of total bad feedback for url over "+str(tmrange)+" weeks")
         #st.plotly_chart(badperc)
-        st.header('Pages of interest: these specific pages have recieve a high volume of negative feedbacks')
+        st.header('Pages of interest: these specific pages have recieved a high volume of negative feedbacks')
         st.write('Bubble size reflects total feedbacks for a specific page, bubble redness reflects amount of bad feedback for same page.')
         apdate_df=date_df
         apdate_df['feedback_count']= apdate_df['Source URL'].map(apdate_df['Source URL'].value_counts())
@@ -187,11 +182,12 @@ def main():
             intrfig = px.scatter(bdap_df, y='Source URL', x='negative_feedbacks', color='negative_feedbacks', height = 800, color_continuous_scale=px.colors.sequential.YlOrRd, size='feedback_count')
             intrfig.update_layout(margin=dict(l=500,r=10,t=10,b=20), xaxis=dict(dtick=1))
             intrfig.layout.coloraxis.showscale = False
+            intrfig.update_yaxes(title_text='')
             st.plotly_chart(intrfig)
             dd_df = bdap_df.drop_duplicates(subset='Source URL', keep='first')
             nlarg_df = dd_df.nlargest(5,['negative_feedbacks'])
             c = 0
-            st.write('Links to worst performing pages (pulled from above):')
+            st.write('**Links to worst performing pages (pulled from above):**')
             for i in nlarg_df.itertuples():
                 c = c+1
                 st.write(str(c)+'. '+str(i._5))
@@ -233,59 +229,59 @@ def main():
     for row in mess_df.itertuples():
         if cfsb in str(row.Country):
             if (any(x in row.Message.lower() for x in kw1[mfildic[mfsb]])) and (any(y in row.Message.lower() for y in kw2[mfildic[mfsb]])):
-                try:
-                    detlan = detect(str(row.Message))
-                except:
-                    detlan = 'en'
+                #try:
+                    #detlan = detect(str(row.Message))
+                #except:
+                    #detlan = 'en'
                 if row._7 == 3:
-                    if detlan == 'en':
-                        st.info("\"" + row.Message + "\"")
-                    else:
-                        tr.set_text(str(row.Message))
-                        try:
-                            tr.set_from_lang(detlan)
-                        except:
-                            tr.set_from_lang('en')
-                        tr.set_to_lang('en')
-                        try:
-                            mtrans = tr.translate(timeout=1)
-                        except:
-                            mtrans = '[Failed]'
-                        st.info("\"" + row.Message + "\""+"  \nTranslation Attempt: "+"\"" + mtrans + "\"")
+                    #if detlan == 'en':
+                    st.info("\"" + row.Message + "\"")
+                    #else:
+                        #tr.set_text(str(row.Message))
+                        #try:
+                            #tr.set_from_lang(detlan)
+                        #except:
+                            #tr.set_from_lang('en')
+                        #tr.set_to_lang('en')
+                        #try:
+                            #mtrans = tr.translate(timeout=1)
+                        #except:
+                            #mtrans = '[Failed]'
+                        #st.info("\"" + row.Message + "\""+"  \nTranslation Attempt: "+"\"" + mtrans + "\"")
                     st.write("\- from **"+str(row.Email)+"** on "+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device), row._3)
                     body = body + '\n\n\"' + str(row.Message) + '\"' + '\n' + "- from "+str(row.Email)+" on "+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Browser)+" on "+str(row.Device)+'\n'+str(row._3)
                 elif row._7 >3:
-                    if detlan == 'en':
-                        st.success("\"" + row.Message + "\"")
-                    else:
-                        tr.set_text(str(row.Message))
-                        try:
-                            tr.set_from_lang(detlan)
-                        except:
-                            tr.set_from_lang('en')
-                        tr.set_to_lang('en')
-                        try:
-                            mtrans = tr.translate(timeout=1)
-                        except:
-                            mtrans = '[Failed]'
-                        st.success("\"" + row.Message + "\""+"  \nTranslation Attempt: "+"\"" + mtrans + "\"")
+                    #if detlan == 'en':
+                    st.success("\"" + row.Message + "\"")
+                    #else:
+                        #tr.set_text(str(row.Message))
+                        #try:
+                            #tr.set_from_lang(detlan)
+                        #except:
+                            #tr.set_from_lang('en')
+                        #tr.set_to_lang('en')
+                        #try:
+                            #mtrans = tr.translate(timeout=1)
+                        #except:
+                            #mtrans = '[Failed]'
+                        #st.success("\"" + row.Message + "\""+"  \nTranslation Attempt: "+"\"" + mtrans + "\"")
                     st.write("\- from **"+str(row.Email)+"** on "+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device), row._3)
                     body = body + '\n\n\"' + str(row.Message) + '\"' + '\n' + "- from "+str(row.Email)+" on "+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Browser)+" on "+str(row.Device)+'\n'+str(row._3)
                 else:
-                    if detlan =='en':
-                        st.error("\"" + row.Message + "\"")
-                    else:
-                        tr.set_text(str(row.Message))
-                        try:
-                            tr.set_from_lang(detlan)
-                        except:
-                            tr.set_from_lang('en')
-                        tr.set_to_lang('en')
-                        try:
-                            mtrans = tr.translate(timeout=1)
-                        except:
-                            mtrans = '[Failed]'
-                        st.error("\"" + row.Message + "\""+"  \nTranslation Attempt: "+"\"" + mtrans + "\"")
+                    #if detlan =='en':
+                    st.error("\"" + row.Message + "\"")
+                    #else:
+                        #tr.set_text(str(row.Message))
+                        #try:
+                            #tr.set_from_lang(detlan)
+                        #except:
+                            #tr.set_from_lang('en')
+                        #tr.set_to_lang('en')
+                        #try:
+                            #mtrans = tr.translate(timeout=1)
+                        #except:
+                            #mtrans = '[Failed]'
+                        #st.error("\"" + row.Message + "\""+"  \nTranslation Attempt: "+"\"" + mtrans + "\"")
                     st.write("\- from **"+str(row.Email)+"** on "+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Country)+" | "+str(row.Browser)+" on "+str(row.Device), row._3)
                     body = body + '\n\n\"' + str(row.Message) + '\"' + '\n' + "- from "+str(row.Email)+" on "+row._1.strftime("%m/%d/%Y, %H:%M:%S")+" | "+str(row.Browser)+" on "+str(row.Device)+'\n'+str(row._3)
 
