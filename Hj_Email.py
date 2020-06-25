@@ -164,7 +164,7 @@ def main():
         #jobstores = {'mongo': MongoDBJobStore()}
         #apscheduler.jobstores.memory.MemoryJobStore.shutdown()
     sched = BlockingScheduler()
-    sched.add_job(schtask,'interval', hours=1, id='sendresp_emails')
+    sched.add_job(schtask,'interval', weeks=1, id='sendresp_emails')
     sched.start()
     #setupSch()
     #atexit.register(lambda: sched.shutdown())
