@@ -23,7 +23,7 @@ def main():
     def sendEm():
         testemail = MIMEMultipart()
         sender_email = "hotjarreports@gmail.com"
-        pw = "Rockwell1"
+        pw = "Rockwell4058"
         target_email = "rsolande@ra.rockwell.com"
         testemail["From"] = sender_email
         testemail["To"] = target_email
