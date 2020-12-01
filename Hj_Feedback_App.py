@@ -62,6 +62,23 @@ def main():
         'sec-fetch-site': 'same-origin',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36'
         }
+    #New header and URL added for grabbing hotjar data from the staging environment
+    getstageheader = {
+    'authority': 'insights.hotjar.com',
+    'method': 'GET',
+    'path': '/api/v1/sites/1764089/feedback/305636/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-12-19',
+    'scheme': 'https',
+    'accept': '*/*',
+    'accept-encoding': 'gzip, deflate',
+    'accept-language': 'en-US,en;q=0.9',
+    'referer': 'https://insights.hotjar.com/sites/1764089/feedback/responses/305636',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'
+    }
+    stageDLurl = 'https://insights.hotjar.com/api/v1/sites/1764089/feedback/305636/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-12-19'
+
     st.title("HotJar Feedback Analysis")
 
     timzo = pytz.timezone('US/Eastern')
@@ -88,6 +105,13 @@ def main():
                     with open('feedback-256010.csv', 'wb') as fd:
                         for chunk in r.iter_content(chunk_size=None):
                             fd.write(chunk)
+            with requests.Session() as session:
+                payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
+                rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
+                with session.get(stageDLurl, headers=getstageheader, stream=True) as r:
+                    with open('feedback-305636.csv', 'wb') as fd:
+                        for chunk in r.iter_content(chunk_size=None):
+                            fd.write(chunk)
             dlresp = st.text('Download successful.')
         else:
             dlresp = st.text('Please wait 5 minutes before downloading again.')
@@ -102,6 +126,9 @@ def main():
     #elif lastmod.date() == today.date():
         #st.info("Hotjar feedback data has been downloaded recently.")
     df = pd.read_csv('feedback-256010.csv')
+    dfstage = pd.read_csv('feedback-305636.csv')
+    #Combine the two hotjar dataframes
+    df = pd.concat([df,dfstage], ignore_index=True)
 
     kvp = {"[All Feedback]" : "","Allen-Bradley" : "ab.rockwellautomation", "Rockwell Automation" : "www.rockwellautomation.com","RA/my" : "www.rockwellautomation.com/my","PCDC" : "compatibility.rockwellautomation",
     "Account" : "www.rockwellautomation.com/account/","Download.RA" : "download.rockwellautomation.com","Search" : "rockwellautomation.com/search","Investor Relations" : "ir.rockwellautomation",
@@ -109,8 +136,8 @@ def main():
 
     ablkvp = {"[No language specified]":"","zh":"/zh/","Deutsch":"/de/","Spanish":"/es/","French":"/fr/","Italian":"/it/","Japanese":"/ja/","Korean":"/ko/","Portuguese":"/pt/"}
     tlkeys = {"[No country filter]":1,"NA":2,"EMEA":3,"APAC":4,"LAR":5}
-    testlist = {1 : [""], 2 : ["en_NA"], 3 : ["cs_CZ","en_UK","nl_BE","da_DK","en_ZA","nl_NL","de_AT","es_ES","pl_PL","de_CH","fr_BE","pt_pt","de_DE","fr_CH","ru_RU","en_IE","fr_FR","sv_SE","en_IL","it_IT","tr_TR","en_MDE"],
-    4 : ["zh_CN","ja_JP","zh_TW","en_SEA","ko_KR","en_AU","en_NZ","en_IN"], 5 : ["en_CAR","es_CL","es_PE","es_CAR","es_CO","es_VE","es_AR","es_EC","pt_BR","es_CEM","es_MX"]}
+    testlist = {1 : [""], 2 : ["en-us"], 3 : ["cs-cz","en-gb","nl-be","da-DK","en-za","nl-nl","de-at","es-es","pl-pl","de-ch","fr-be","pt-pt","de-de","fr-ch","ru-ru","en-ie","fr-fr","sv-se","en-il","it-it","tr-tr","en-eg"],
+    4 : ["zh-hans-cn","ja-jp","zh-hant-cn","en-id","ko-kr","en-au","en-nz","en-in"], 5 : ["en-ht","es-cl","es-pe","es-ht","es-co","es-ve","es-ar","es-ec","pt-br","es-gt","es-mx"]}
 
 
     urlch = st.selectbox("Choose a URL to analyze:", options=list(kvp.keys()))
@@ -135,6 +162,8 @@ def main():
 
     down_df['Date Submitted'] = pd.to_datetime(down_df['Date Submitted'])
     down_df['Date Submitted']=down_df['Date Submitted'].dt.tz_localize(tz='US/Eastern', nonexistent='shift_forward')
+    #Sort by date added with the new concatation of dataframes
+    down_df = down_df.sort_values(by="Date Submitted", ascending=False)
     date_df = down_df.loc[down_df['Date Submitted'] >= week_prior]
     #st.write(date_df)
 
@@ -148,7 +177,7 @@ def main():
         st.header("What has total feedback recieved for this URL looked like over a span of time?")
         st.write("Legend guide: Emotion 1 = Hate ... Emotion 5 = Love")
         histfig = px.histogram(date_df, x='Date Submitted', color='Emotion (1-5)',
-            title='Feedback for URL over '+str(tmrange)+' week(s)',
+            title='Feedback for '+str(urlch)+' over '+str(tmrange)+' week(s)',
             opacity=0.8,
             category_orders={'Emotion (1-5)':[1,2,3,4,5]},
             color_discrete_map={1:"#e83b3a",2:"#c97d7d",3:"#BAB0AC",4:"#99bd9c",5:"#4cba76"},
@@ -158,7 +187,7 @@ def main():
         st.plotly_chart(histfig)
         st.header("Which Country is submitting the most feedback? How do user experiences across countries match up with each other?")
         counfig = px.histogram(date_df, y='Country', color='Emotion (1-5)',
-            title='Breakdown by Country for url given',
+            title='Breakdown by Country for '+str(urlch),
             opacity=0.8,
             orientation = 'h',
             height = 800,
