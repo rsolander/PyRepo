@@ -139,11 +139,35 @@ def main():
             'sec-fetch-site': 'same-origin',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36'
             }
+        #New header and URL added for grabbing hotjar data from the staging environment
+        getstageheader = {
+        'authority': 'insights.hotjar.com',
+        'method': 'GET',
+        'path': '/api/v1/sites/1764089/feedback/305636/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-12-19',
+        'scheme': 'https',
+        'accept': '*/*',
+        'accept-encoding': 'gzip, deflate',
+        'accept-language': 'en-US,en;q=0.9',
+        'referer': 'https://insights.hotjar.com/sites/1764089/feedback/responses/305636',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'
+        }
+        stageDLurl = 'https://insights.hotjar.com/api/v1/sites/1764089/feedback/305636/responses?fields=browser,content,created_datetime_string,created_epoch_time,country_code,country_name,device,id,index,os,response_url,short_visitor_uuid,window_size&sort=-id&offset=0&amount=30000&format=csv&filter=created__ge__2009-12-19'
+
         with requests.Session() as session:
             payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
             rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
             with session.get(dlurl, headers=headexp, stream=True) as r:
                 with open('feedback-256010.csv', 'wb') as fd:
+                    for chunk in r.iter_content(chunk_size=None):
+                        fd.write(chunk)
+        with requests.Session() as session:
+            payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
+            rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
+            with session.get(stageDLurl, headers=getstageheader, stream=True) as r:
+                with open('feedback-305636.csv', 'wb') as fd:
                     for chunk in r.iter_content(chunk_size=None):
                         fd.write(chunk)
         contdf = pd.read_csv('HJemail_contacts.csv')
@@ -217,18 +241,21 @@ def main():
 def sendEmail(target_email,url,tmrange,etype):
     print('SendEmail func started')
     df = pd.read_csv('feedback-256010.csv')
+    dfstage = pd.read_csv('feedback-305636.csv')
+    #Combine the two hotjar dataframes
+    df = pd.concat([df,dfstage], ignore_index=True)
     edf = pd.read_csv('email_records.csv')
     if url == "EMEA":
-        csites = ["cs_CZ","en_UK","nl_BE","da_DK","en_ZA","nl_NL","de_AT","es_ES","pl_PL","de_CH","fr_BE","pt_pt","de_DE","fr_CH","ru_RU","en_IE","fr_FR","sv_SE","en_IL","it_IT","tr_TR","en_MDE"]
+        csites = ["cs-cz","en-gb","nl-be","da-dk","en-za","nl-nl","de-at","es-es","pl-pl","de-ch","fr-be","pt-pt","de-de","fr-ch","ru-ru","en-ie","fr-fr","sv-se","en-il","it-it","tr-tr","en-eg"]
         down_df = df[df['Source URL'].str.contains('|'.join(csites))]
     elif url == "North America":
-        csites = ["en_NA"]
+        csites = ["en-us"]
         down_df = df[df['Source URL'].str.contains('|'.join(csites))]
     elif url == "APAC":
-        csites = ["zh_CN","ja_JP","zh_TW","en_SEA","ko_KR","en_AU","en_NZ","en_IN"]
+        csites = ["zh-hans-cn","ja-jp","zh-hant-cn","en-id","ko-kr","en-au","en-nz","en-in"]
         down_df = df[df['Source URL'].str.contains('|'.join(csites))]
     elif url == "LAR":
-        csites = ["en_CAR","es_CL","es_PE","es_CAR","es_CO"]
+        csites = ["en-ht","es-cl","es-pe","es-ht","es-co"]
         down_df = df[df['Source URL'].str.contains('|'.join(csites))]
     elif url == "rockwellautomation.com/search":
         csites = ['rockwellautomation.com/search','rockwellautomation.com/my/search']
@@ -244,6 +271,8 @@ def sendEmail(target_email,url,tmrange,etype):
 
     down_df['Date Submitted'] = pd.to_datetime(down_df['Date Submitted'])
     down_df['Date Submitted']=down_df['Date Submitted'].dt.tz_localize(tz='US/Eastern', nonexistent='shift_forward')
+    #Sort by date added with the new concatation of dataframes
+    down_df = down_df.sort_values(by="Date Submitted", ascending=False)
     date_df = down_df.loc[down_df['Date Submitted'] >= week_prior]
 
     #Cancel if no feedback at all in past week
