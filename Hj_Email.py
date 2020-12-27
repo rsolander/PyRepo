@@ -282,7 +282,7 @@ def sendEmail(target_email,url,tmrange,etype):
 
     testemail = MIMEMultipart()
     sender_email = "hotjarreports@gmail.com"
-    pw = "Rockwell4058"
+    pw = "Rockwell4059"
     #target_email = "olander.14@yahoo.com"
     testemail["From"] = sender_email
     testemail["To"] = target_email
