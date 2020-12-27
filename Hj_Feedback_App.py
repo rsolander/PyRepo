@@ -99,14 +99,14 @@ def main():
         lastmodloc = timzo.localize(lastmod)
         if (today - timedelta(minutes=5)) >=lastmodloc:
             with requests.Session() as session:
-                payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
+                payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password": os.environ.get('PW_HJ')}
                 rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
                 with session.get(dlurl, headers=headexp, stream=True) as r:
                     with open('feedback-256010.csv', 'wb') as fd:
                         for chunk in r.iter_content(chunk_size=None):
                             fd.write(chunk)
             with requests.Session() as session:
-                payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password":"tho3F^tick"}
+                payload = {"action":"login", "email":"rsolande@ra.rockwell.com", "password": os.environ.get('PW_HJ')}
                 rp = session.post(loginurl, data=json.dumps(payload), headers=postheader)
                 with session.get(stageDLurl, headers=getstageheader, stream=True) as r:
                     with open('feedback-305636.csv', 'wb') as fd:
